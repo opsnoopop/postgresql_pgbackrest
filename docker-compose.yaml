@@ -1,0 +1,48 @@
+services:
+
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: container-postgres18
+    hostname: postgres18
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: kGrlCNYLHB
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes:
+      - ./data/:/var/lib/postgresql/18/docker/
+      - ./backup/:/backup/pgbackrest/
+      - ./pgbackrest.conf:/etc/pgbackrest.conf:ro
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  pgbackrest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: container-pgbackrest
+    hostname: pgbackrest
+    user: postgres
+    environment:
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes:
+      - ./data/:/var/lib/postgresql/18/docker/
+      - ./backup/:/backup/pgbackrest/
+      - ./pgbackrest.conf:/etc/pgbackrest.conf:ro
+    command: ["sleep", "infinity"]
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: container-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: unless-stopped

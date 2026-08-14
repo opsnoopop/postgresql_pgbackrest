@@ -1,0 +1,29 @@
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+# Full Backup — ทุกวันอาทิตย์ เวลา 03:05
+5 3 * * 0 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=full backup >/dev/null 2>&1
+
+# Differential Backup — จันทร์-เสาร์ เวลา 03:05
+5 3 * * 1-6 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=diff backup >/dev/null 2>&1
+
+# Incremental Backup — ทุกชั่วโมง เวลา xx:05 ยกเว้น 03:05 เพราะหลบให้ FULL หรือ DIFF
+5 0-2,4-23 * * * root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=incr backup >/dev/null 2>&1
+
+# Insert Test Data — ทุกนาที
+* * * * * root bash test_insert.sh >/dev/null 2>&1
