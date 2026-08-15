@@ -26,4 +26,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 5 0-2,4-23 * * * root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=incr backup >/dev/null 2>&1
 
 # Insert Test Data — ทุกนาที
-* * * * * root bash test_insert.sh >/dev/null 2>&1
+* * * * * root bash /root/postgresql_pgbackrest/test_insert.sh >/dev/null 2>&1

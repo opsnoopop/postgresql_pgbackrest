@@ -65,6 +65,7 @@ docker exec container-postgres18 psql -U postgres -d mydatabase -c "INSERT INTO 
 # 2. Backup
 ## create stanza
 ```
+docker exec -u root container-postgres18 chown -R postgres:postgres /backup/pgbackrest
 docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza stanza-create
   e.g.
   ...
@@ -105,7 +106,7 @@ vim /etc/crontab
 5 0-2,4-23 * * * root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=incr backup >/dev/null 2>&1
 
 # Insert Test Data — ทุกนาที
-* * * * * root bash test_insert.sh >/dev/null 2>&1
+* * * * * root /root/postgresql_pgbackrest/bash test_insert.sh >/dev/null 2>&1
 ```
 
 
