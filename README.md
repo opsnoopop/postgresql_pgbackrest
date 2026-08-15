@@ -113,9 +113,12 @@ vim /etc/crontab
 
 # 3. Restore
 ## step restore 1 stop container-postgres18
+```
 docker stop container-postgres18
+```
 
 ## step restore 2 delete data
+```
 docker exec container-pgbackrest \
   bash -c '
     find /var/lib/postgresql/18/docker \
@@ -123,21 +126,48 @@ docker exec container-pgbackrest \
       -maxdepth 1 \
       -exec rm -rf {} +
   '
+```
 
 ## step restore 3 check entry data 
+```
 docker exec container-pgbackrest ls -la /var/lib/postgresql/18/docker
+```
 
 ## step restore 4 stanza info
+```
 docker exec container-pgbackrest pgbackrest --stanza=mystanza info
+```
 
-## step restore 5 restore
+## step restore 5 วิธีหา เวลามากสุด last_archived_time ทีสามารถ restore ได้
+```
+docker exec container-postgres18 psql -U postgres -x -c "
+SELECT *
+FROM pg_stat_archiver;
+"
+  e.g.
+  -[ RECORD 1 ]------+------------------------------
+  archived_count     | 25
+  last_archived_wal  | 0000000100000000000000B2
+  last_archived_time | 2026-08-15 07:55:09.315321+00
+  failed_count       | 0
+  last_failed_wal    | 
+  last_failed_time   | 
+  stats_reset        | 2026-08-15 07:31:01.95737+00
+```
+
+
+## step restore 6 restore
+```
 docker exec container-pgbackrest \
   pgbackrest \
   --stanza=mystanza \
   --type=time \
-  --target="2026-08-14 09:47:49+00" \
+  --target="2026-08-15 07:55:09+00" \
   --target-action=promote \
   restore
+```
 
-## step restore 6 start container-postgres18
+## step restore 7 start container-postgres18
+```
 docker start container-postgres18
+```
