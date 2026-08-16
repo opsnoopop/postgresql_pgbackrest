@@ -8,6 +8,7 @@ docker compose up -d --build
 ## check archive_mode
 ```
 docker exec container-postgres18 psql -U postgres -c "SHOW archive_mode;"
+  
   e.g.
   archive_mode 
   --------------
@@ -18,6 +19,7 @@ docker exec container-postgres18 psql -U postgres -c "SHOW archive_mode;"
 ## check archive_command
 ```
 docker exec container-postgres18 psql -U postgres -c "SHOW archive_command;"
+  
   e.g.
   archive_command                
   -----------------------------------------------
@@ -28,6 +30,7 @@ docker exec container-postgres18 psql -U postgres -c "SHOW archive_command;"
 ## check archive_timeout
 ```
 docker exec container-postgres18 psql -U postgres -c "SHOW archive_timeout;"
+  
   e.g.
   archive_timeout 
   -----------------
@@ -35,27 +38,30 @@ docker exec container-postgres18 psql -U postgres -c "SHOW archive_timeout;"
   (1 row)
 ```
 
-## create database mydatabase
+## (Optional) create database mydatabase
 ```
 docker exec container-postgres18 psql -U postgres -c "CREATE DATABASE mydatabase;"
+  
   e.g.
   CREATE DATABASE
 ```
 
-## create table mytable
+## (Optional) create table mytable
 ```
 docker exec container-postgres18 psql -U postgres -d mydatabase -c "CREATE TABLE mytable (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );"
+  
   e.g.
   CREATE TABLE
 ```
 
-## test insert manual
+## (Optional) test insert manual
 ```
 docker exec container-postgres18 psql -U postgres -d mydatabase -c "INSERT INTO mytable (name) VALUES ('Test 1');"
+  
   e.g.
   INSERT 0 1
 ```
@@ -67,6 +73,7 @@ docker exec container-postgres18 psql -U postgres -d mydatabase -c "INSERT INTO 
 ```
 docker exec -u root container-postgres18 chown -R postgres:postgres /backup/pgbackrest
 docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza stanza-create
+  
   e.g.
   ...
   INFO: stanza-create command end: completed successfully
@@ -75,6 +82,7 @@ docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza s
 ## check stanza
 ```
 docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza check
+  
   e.g.
   ...
   INFO: check command end: completed successfully
@@ -83,6 +91,7 @@ docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza c
 ## start full backup
 ```
 docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=full backup
+  
   e.g.
   ...
   INFO: expire command end: completed successfully
@@ -96,16 +105,16 @@ docker exec container-pgbackrest pgbackrest --stanza=mystanza info
 ## edit crontab
 vim /etc/crontab
 ``` crontab
-# Full Backup — ทุกวันอาทิตย์ เวลา 03:05
-5 3 * * 0 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=full backup >/dev/null 2>&1
+# Full Backup — ทุกวันอาทิตย์ 03:05 UTC +07:00 (20:05 UTC +00:00)
+5 20 * * 6 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=full backup >/dev/null 2>&1
 
-# Differential Backup — จันทร์-เสาร์ เวลา 03:05
-5 3 * * 1-6 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=diff backup >/dev/null 2>&1
+# Differential Backup — จันทร์-เสาร์ 03:05 UTC +07:00 (20:05 UTC +00:00)
+5 20 * * 0-5 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=diff backup >/dev/null 2>&1
 
-# Incremental Backup — ทุกชั่วโมง เวลา xx:05 ยกเว้น 03:05 เพราะหลบให้ FULL หรือ DIFF
-5 0-2,4-23 * * * root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=incr backup >/dev/null 2>&1
+# Incremental Backup — ทุกชั่วโมง เวลา xx:05 ยกเว้น 03:05 UTC +07:00 (20:05 UTC +00:00) เพราะหลบให้ FULL หรือ Differential
+5 0-19,21-23 * * * root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=incr backup >/dev/null 2>&1
 
-# Insert Test Data — ทุกนาที
+# (Optional) Insert Test Data — ทุกนาที
 * * * * * root /root/postgresql_pgbackrest/bash test_insert.sh >/dev/null 2>&1
 ```
 
@@ -117,7 +126,7 @@ vim /etc/crontab
 docker stop container-postgres18
 ```
 
-## step restore 2 delete data
+## step restore 2 must be delete entry data !!! before run command please check your have backup
 ```
 docker exec container-pgbackrest \
   bash -c '
@@ -140,10 +149,8 @@ docker exec container-pgbackrest pgbackrest --stanza=mystanza info
 
 ## step restore 5 วิธีหา เวลามากสุด last_archived_time ทีสามารถ restore ได้
 ```
-docker exec container-postgres18 psql -U postgres -x -c "
-SELECT *
-FROM pg_stat_archiver;
-"
+docker exec container-postgres18 psql -U postgres -x -c "SELECT * FROM pg_stat_archiver;"
+  
   e.g.
   -[ RECORD 1 ]------+------------------------------
   archived_count     | 25
@@ -156,7 +163,7 @@ FROM pg_stat_archiver;
 ```
 
 
-## step restore 6 restore
+## step restore 6 choice time to restore
 ```
 docker exec container-pgbackrest \
   pgbackrest \

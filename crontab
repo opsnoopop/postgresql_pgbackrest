@@ -16,14 +16,14 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 # |  |  |  |  |
 # *  *  *  *  * user-name command to be executed
 
-# Full Backup — ทุกวันอาทิตย์ เวลา 03:05
-5 3 * * 0 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=full backup >/dev/null 2>&1
+# Full Backup — ทุกวันอาทิตย์ 03:05 UTC +07:00 (20:05 UTC +00:00)
+5 20 * * 6 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=full backup >/dev/null 2>&1
 
-# Differential Backup — จันทร์-เสาร์ เวลา 03:05
-5 3 * * 1-6 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=diff backup >/dev/null 2>&1
+# Differential Backup — จันทร์-เสาร์ 03:05 UTC +07:00 (20:05 UTC +00:00)
+5 20 * * 0-5 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=diff backup >/dev/null 2>&1
 
-# Incremental Backup — ทุกชั่วโมง เวลา xx:05 ยกเว้น 03:05 เพราะหลบให้ FULL หรือ DIFF
-5 0-2,4-23 * * * root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=incr backup >/dev/null 2>&1
+# Incremental Backup — ทุกชั่วโมง เวลา xx:05 ยกเว้น 03:05 UTC +07:00 (20:05 UTC +00:00) เพราะหลบให้ FULL หรือ Differential
+5 0-19,21-23 * * * root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=incr backup >/dev/null 2>&1
 
-# Insert Test Data — ทุกนาที
+# (Optional) Insert Test Data — ทุกนาที
 * * * * * root bash /root/postgresql_pgbackrest/test_insert.sh >/dev/null 2>&1
