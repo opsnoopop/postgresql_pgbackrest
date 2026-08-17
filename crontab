@@ -16,14 +16,27 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 # |  |  |  |  |
 # *  *  *  *  * user-name command to be executed
 
-# Full Backup — ทุกวันอาทิตย์ 03:05 UTC +07:00 (20:05 UTC +00:00)
+# ========== start way1 pgBackRest backup ==========
+# pgBackRest Full backup — ทุกวันอาทิตย์ 03:05 UTC +07:00 (20:05 UTC +00:00)
 5 20 * * 6 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=full backup >/dev/null 2>&1
 
-# Differential Backup — จันทร์-เสาร์ 03:05 UTC +07:00 (20:05 UTC +00:00)
+# pgBackRest Differential backup — จันทร์-เสาร์ 03:05 UTC +07:00 (20:05 UTC +00:00)
 5 20 * * 0-5 root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=diff backup >/dev/null 2>&1
 
-# Incremental Backup — ทุกชั่วโมง เวลา xx:05 ยกเว้น 03:05 UTC +07:00 (20:05 UTC +00:00) เพราะหลบให้ FULL หรือ Differential
+# pgBackRest Incremental backup — ทุกชั่วโมง เวลา xx:05 ยกเว้น 03:05 UTC +07:00 (20:05 UTC +00:00) เพราะหลบให้ FULL หรือ Differential
 5 0-19,21-23 * * * root docker exec container-postgres18 sudo -u postgres pgbackrest --stanza=mystanza --type=incr backup >/dev/null 2>&1
+# ========== end way1 pgBackRest backup ==========
 
-# (Optional) Insert Test Data — ทุกนาที
-* * * * * root bash /root/postgresql_pgbackrest/test_insert.sh >/dev/null 2>&1
+# ========== start way2 pg_dumpall backup ==========
+# pg_dumpall backup ทุก Databases ในเครื่องพร้อมกัน, backup User/Roles, backup Tablespaces, ได้เป็นข้อความ SQL (.sql) เท่านั้น ## คำสั่งที่ใช้กู้คืน psql เท่านั้น
+10 20 * * * root bash /root/postgresql_pgbackrest/script_backup_pg_dumpall.sh >/dev/null 2>&1
+# ========== end way2 pg_dumpall backup ==========
+
+# ========== start way3 pg_dump backup ==========
+# pg_dump backup ได้ทีละ 1 Database, ไม่่ backup User/Roles, ไม่ backup Tablespaces, Format (.sql, .dump, .tar) ## คำสั่งที่ใช้กู้คืน pg_restore (สำหรับ .dump) หรือ psql 
+15 20 * * * root bash /root/postgresql_pgbackrest/script_backup_pg_dump.sh >/dev/null 2>&1
+# ========== end way3 pg_dump backup ==========
+
+# ========== start (Optional) auto insert ==========
+* * * * * root bash /root/postgresql_pgbackrest/script_insert.sh >/dev/null 2>&1
+# ========== end (Optional) auto insert ==========
